@@ -1,13 +1,8 @@
-# ec2instances.info
+# Azure VM Compare
 
-I was sick of comparing EC2 instance metrics and pricing on Amazon's site so I made this. Improvements welcome!
+As my first project in my summer internship at Microsoft Hong Kong, I was asked to look into solving the problem of analyzing the offerings of Azure Virtual Machines and comparing it with AWS EC2 instances. I henceforth found a solution in the form of EC2instances.info, forked the github, ported it for Azure and implemented several new features.
 
-
-### Project status
-
-I'm actively maintaining the site with the help of contributors here, but am not working on large new features.
-
-People have suggested many neat ideas and feature requests but it remains unclear how long the site will be necessary. I've heard from teams at Amazon that they use the site internally and some have mentioned that that they might be building something similar. They certainly have access to better data.
+There is a lot of room for refinement, enhancement, improvement and testing, and if you think you can contribute to this project please do. Also, all kind of feedback is also welcome.
 
 
 ### Running locally
