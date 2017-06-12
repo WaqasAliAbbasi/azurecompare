@@ -41,6 +41,10 @@ body {
   cursor: pointer;
 }
 
+#data tr.aws {
+    background-color: #FFE4C4;
+}
+
 #data tr.highlight, #data tr.highlight:hover {
   background-color: #D3FFFF;
 }
@@ -55,14 +59,45 @@ body {
 
 #data td {
   font-size: 13px;
+  vertical-align: middle;
+}
+
+#total {
+    cursor: default !important;
 }
 
 #data td.name {
   text-align: left;
 }
+#data td.quantity {
+    text-align: center;
+}
+
+#data input {
+    text-align: center;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+::-ms-clear {
+    display: none;
+}
+
+
+#data td.cores {
+    text-align: center;
+}
 
 #data td.memory {
-  text-align: right;
+  text-align: center;
 }
 
 #data td.computeunits {
@@ -70,7 +105,7 @@ body {
 }
 
 #data td.storage {
-  text-align: right;
+  text-align: center;
 }
 
 #data td.architecture {
@@ -111,6 +146,10 @@ body {
 
 .well p:last-child {
   margin-bottom: 0;
+}
+
+th.quantity, th.cores, th.memory, th.storage {
+    text-align: center;
 }
 
 /* DataTables: http://datatables.net/blog/Twitter_Bootstrap_2 */

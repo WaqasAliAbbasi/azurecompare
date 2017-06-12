@@ -3,26 +3,28 @@
 <html lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Amazon EC2 Instance Comparison</title>
+    <title>Azure - VM Compare</title>
     <link rel="stylesheet" href="/default.css" media="screen">
     <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css" media="screen">
-    <link rel="icon" type="image/png" href="/favicon.png">
+	<link rel="stylesheet" href="https://cdn.datatables.net/select/1.2.2/css/select.dataTables.min.css" media="screen">
+    <link rel="icon" type="image/png" href="/favicon.ico">
   </head>
 
-  <body class="ec2instances">
+  <body class="azurevirtualmachines">
     <div class="page-header">
 
       <span class="pull-right">
-        <a href="https://twitter.com/share" class="twitter-share-button" data-via="powdahound"></a>
-        <iframe src="https://ghbtns.com/github-btn.html?user=powdahound&repo=ec2instances.info&type=star&count=true" frameborder="0" scrolling="0" width="100px" height="20px"></iframe>
+	  <a href="mailto:a-waali@microsoft.com" target="_blank" class="btn btn-primary">Feedback</a>
+        <!--<a href="https://twitter.com/share" class="twitter-share-button" data-via="WaqasAliAbbasi"></a>-->
+        <!--<iframe src="https://ghbtns.com/github-btn.html?user=powdahound&repo=ec2instances.info&type=star&count=true" frameborder="0" scrolling="0" width="100px" height="20px"></iframe>-->
       </span>
 
       <%block name="header"/>
 
       <p class="pull-right label label-info">Last Update: ${generated_at}</p>
       <ul class="nav nav-tabs">
-        <li role="presentation" class="${'active' if self.attr.active_ == 'ec2' else ''}"><a href="/">EC2</a></li>
-        <li role="presentation" class="${'active' if self.attr.active_ == 'rds' else ''}"><a href="/rds/">RDS</a></li>
+        <li role="presentation" class="${'active' if self.attr.active_ == 'azurevms' else ''}"><a href="/">Azure Virtual Machines</a></li>
+        <li role="presentation" class="${'active' if self.attr.active_ == 'withaws' else ''}"><a href="/withaws/">Azure/AWS</a></li>
       </ul>
     </div>
 
@@ -33,19 +35,19 @@
     <div class="well">
       <p>
         <strong>Why?</strong>
-        Because it's frustrating to compare instances using Amazon's own <a href="http://aws.amazon.com/ec2/instance-types/" target="_blank">instance type</a>, <a href="http://aws.amazon.com/ec2/pricing/" target="_blank">pricing</a>, and other pages.
+        Because it's time-consuming to compare virtual machines using Azure's own <a href="https://azure.microsoft.com/en-us/pricing/details/virtual-machines/linux/" target="_blank">pricing</a>, <a href="https://azure.microsoft.com/en-us/pricing/calculator/" target="_blank">pricing calculator</a>, and other pages.
       </p>
       <p>
         <strong>Who?</strong>
-        It was started by <a href="http://twitter.com/powdahound" target="_blank">@powdahound</a>, contributed to by <a href="https://github.com/powdahound/ec2instances.info/contributors" target="_blank">many</a>, and awaits your improvements <a href="https://github.com/powdahound/ec2instances.info" target="_blank">on GitHub</a>.
+        It was started for AWS by <a href="http://twitter.com/powdahound" target="_blank">@powdahound</a> and contributed to by <a href="https://github.com/powdahound/ec2instances.info/contributors" target="_blank">many</a> at <a href="https://github.com/powdahound/ec2instances.info" target="_blank">GitHub</a>. <a href="https://github.com/WaqasAliAbbasi" target="_blank">WaqasAliAbbasi</a> ported and improved it for Azure under the supervision of Patrick Lam and Brian Law at Microsoft Hong Kong.
       </p>
       <p>
         <strong>How?</strong>
-        Data is scraped from multiple pages on the AWS site. This was last done at ${generated_at}.
+        Azure Virtual Machine specifications are semi-automatically updated while the prices are regularly refreshed through <a href="https://docs.microsoft.com/en-us/azure/billing/billing-usage-rate-card-overview" target="_blank">Azure RateCard API</a>. This was last done at ${generated_at}.
       </p>
 
       <p class="bg-warning">
-        <strong>Warning:</strong> This site is not maintained by or affiliated with Amazon. The data shown is not guaranteed to be accurate or current. Please <a href="http://github.com/powdahound/ec2instances.info/issues">report issues</a> you see.
+        <strong>Warning:</strong> This site is not maintained by or affiliated with Microsoft. The data shown is not guaranteed to be accurate or current. Please <a href="mailto:a-waali@microsoft.com">report issues</a> you see.
       </p>
 
     </div>
@@ -54,23 +56,24 @@
     <script src="/bootstrap/js/bootstrap.min.js" type="text/javascript" charset="utf-8"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.2.4/js/dataTables.buttons.min.js"></script>
+	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/select/1.2.2/js/dataTables.select.min.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.2.4/js/buttons.flash.min.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.2.4/js/buttons.html5.min.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.2.4/js/buttons.print.min.js"></script>
     <script src="/store/store.js" type="text/javascript" charset="utf-8"></script>
     <script src="/default.js" type="text/javascript" charset="utf-8"></script>
 
-    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+	<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-    <script type="text/javascript">
-    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-    </script>
-    <script type="text/javascript">
-    try {
-      var pageTracker = _gat._getTracker("UA-4372467-3");
-      pageTracker._trackPageview();
-    } catch(err) {}
-    </script>
+  ga('create', 'UA-46712607-6', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+    <!--<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>-->
   </body>
 </html>

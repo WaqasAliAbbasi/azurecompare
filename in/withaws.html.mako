@@ -1,5 +1,5 @@
 <%!
-  active_ = "azurevms"
+  active_ = "withaws"
   import json
 %>
 <%inherit file="base.mako" />
@@ -17,35 +17,35 @@
             <span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
-			<li class="available"><a href="javascript:;" data-region='AP Southeast'>Southeast Asia</a></li>
-			<li class="available"><a href="javascript:;" data-region='AP East'>East Asia</a></li>
-			<li class="available"><a href="javascript:;" data-region='AU East'>Australia East</a></li>
-			<li class="available"><a href="javascript:;" data-region='AU Southeast'>Australia Southeast</a></li>
-			<li class="available"><a href="javascript:;" data-region='BR South'>Brazil South</a></li>
-			<li class="available"><a href="javascript:;" data-region='CA Central'>Canada Central</a></li>
-			<li class="available"><a href="javascript:;" data-region='CA East'>Canada East</a></li>
-			<li class="available"><a href="javascript:;" data-region='EU North'>North Europe</a></li>
-			<li class="available"><a href="javascript:;" data-region='EU West'>West Europe</a></li>
-			<li class="available"><a href="javascript:;" data-region='IN Central'>Central India</a></li>
-			<li class="available"><a href="javascript:;" data-region='IN South'>South India</a></li>
-			<li class="available"><a href="javascript:;" data-region='IN West'>West India</a></li>
-			<li class="available"><a href="javascript:;" data-region='JA East'>Japan East</a></li>
-			<li class="available"><a href="javascript:;" data-region='JA West'>Japan West</a></li>
-			<li class="available"><a href="javascript:;" data-region='KR Central'>Korea Central</a></li>
-			<li class="available"><a href="javascript:;" data-region='KR South'>Korea South</a></li>
-			<li class="available"><a href="javascript:;" data-region='UK South'>UK South</a></li>
-			<li class="available"><a href="javascript:;" data-region='UK West'>UK West</a></li>
-			<li class="available"><a href="javascript:;" data-region='US Central'>Central US</a></li>
-			<li class="available"><a href="javascript:;" data-region='US East'>East US</a></li>
-			<li class="available"><a href="javascript:;" data-region='US East 2'>East US 2</a></li>
-			<li class="available"><a href="javascript:;" data-region='US North Central'>North Central US</a></li>
-			<li class="available"><a href="javascript:;" data-region='US South Central'>South Central US</a></li>
-			<li class="available"><a href="javascript:;" data-region='US West'>West US</a></li>
-			<li class="available"><a href="javascript:;" data-region='US West 2'>West US 2</a></li>
-			<li class="available"><a href="javascript:;" data-region='US West Central'>West Central US</a></li>
-			<li class="available"><a href="javascript:;" data-region='US Gov AZ'>US Gov Arizona</a></li>
-			<li class="available"><a href="javascript:;" data-region='US Gov TX'>US Gov Texas</a></li>
-			<li class="available"><a href="javascript:;" data-region='USGov'>US Gov</a></li>
+			<li class="available"><a href="javascript:;" data-region='AP Southeast'>Southeast Asia | Asia-Pacific (Singapore)</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='AP East'>East Asia</a></li>
+			<li class="available"><a href="javascript:;" data-region='AU East'>Australia East | Asia-Pacific (Sydney)</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='AU Southeast'>Australia Southeast</a></li>
+			<li class="available"><a href="javascript:;" data-region='BR South'>Brazil South | South America (S&atilde;o Paulo)</a></li>
+			<li class="available"><a href="javascript:;" data-region='CA Central'>Canada Central | Canada (Central)</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='CA East'>Canada East</a></li>
+			<li class="available"><a href="javascript:;" data-region='EU North'>North Europe | EU (Frankfurt)</a></li>
+			<li class="available"><a href="javascript:;" data-region='EU West'>West Europe | EU (Ireland)</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='IN Central'>Central India</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='IN South'>South India</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='IN West'>West India</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='JA East'>Japan East</a></li>
+			<li class="available"><a href="javascript:;" data-region='JA West'>Japan West | Asia-Pacific (Tokyo)</a></li>
+			<li class="available"><a href="javascript:;" data-region='KR Central'>Korea Central | Asia-Pacific (Seoul)</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='KR South'>Korea South</a></li>
+			<li class="available"><a href="javascript:;" data-region='UK South'>UK South | EU (London)</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='UK West'>UK West</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='US Central'>Central US</a></li>
+			<li class="available"><a href="javascript:;" data-region='US East'>East US | US East (N. Virginia)</a></li>
+			<li class="available"><a href="javascript:;" data-region='US East 2'>East US 2 | US East (Ohio)</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='US North Central'>North Central US</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='US South Central'>South Central US</a></li>
+			<li class="available"><a href="javascript:;" data-region='US West'>West US | US West (Northern California)</a></li>
+			<li class="available"><a href="javascript:;" data-region='US West 2'>West US 2 | US West (Oregon)</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='US West Central'>West Central US</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='US Gov AZ'>US Gov Arizona</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='US Gov TX'>US Gov Texas</a></li>
+			<li class="disabled"><a href="javascript:;" data-region='USGov'>US Gov</a></li>
           </ul>
         </div>
 
@@ -56,11 +56,11 @@
             <span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
-            <li><a href="javascript:;" duration="hourly">Hourly</a></li>
-            <li><a href="javascript:;" duration="daily">Daily</a></li>
-            <li><a href="javascript:;" duration="weekly">Weekly</a></li>
-            <li><a href="javascript:;" duration="monthly">Monthly</a></li>
-            <li><a href="javascript:;" duration="annually">Annually</a></li>
+            <li class="available"><a href="javascript:;" duration="hourly">Hourly</a></li>
+            <li class="available"><a href="javascript:;" duration="daily">Daily</a></li>
+            <li class="available"><a href="javascript:;" duration="weekly">Weekly</a></li>
+            <li class="available"><a href="javascript:;" duration="monthly">Monthly</a></li>
+            <li class="available"><a href="javascript:;" duration="annually">Annually</a></li>
           </ul>
         </div>
 
@@ -103,7 +103,7 @@
 			<th class="memory"></th>
 			<th class="storage"></th>
 			<th class="gpus"></th>
-			% for platform in ['linux', 'windows','sql-web','sql-standard','sql-enterprise','msft-r-server-linux','biztalk-standard','biztalk-enterprise','oracle-java','redhat-enterprise-linux']:
+			% for platform in ['linux', 'windows','sql-web','sql-standard']:
 			<th class="total-cost ${platform}"><span total="0">$0.000 hourly</span></th>
 			% endfor
 		</tr>
@@ -115,29 +115,29 @@
 			<th class="storage"><abbr title="Storage values for disk sizes use a legacy &quot;GB&quot; label. They are actually calculated in gibibytes, and all values should be read as &quot;X GiB&quot;">Storage</abbr></th>
 			<th class="gpus">GPUs</th>
 			<th class="cost linux">Linux</th>
-			<!--<th class="cost linux-low-priority">Linux (Low Priority)</th>-->
 			<th class="cost windows">Windows</th>
-			<!--<th class="cost windows-low-priority">Windows (Low Priority)</th>-->
 			<th class="cost sql-web">SQL Server Web</th>
 			<th class="cost sql-standard">SQL Server Standard</th>
-			<th class="cost sql-enterprise">SQL Server Enterprise</th>
-			<th class="cost msft-r-server-linux">MSFT R Server for Linux</th>
-			<th class="cost biztalk-standard">BizTalk Server Standard</th>
-			<th class="cost biztalk-enterprise">BizTalk Server Enterprise</th>
-			<th class="cost oracle-java">Java Development Environment</th>
-			<th class="cost redhat-enterprise-linux">Red Hat Enterprise Linux</th>
 		</tr>
 	</thead>
 	<tbody>
 		% for inst in instances:
-		<tr class='instance' id="${inst['name'].lower().replace(" ", "_")}">
+		% if '(AWS)' in inst['name']:
+			<tr class='instance aws' id="${inst['name'].lower().replace(" ", "_")}">
+		% else:
+				<tr class='instance' id="${inst['name'].lower().replace(" ", "_")}">
+		% endif
 			<td class="name">${inst['name']}</td>
 			<td class="quantity"><input type="number" class="form-control input-sm" id="quantity" name="quantity" value="1" placeholder="0"></td>
 			<td class="cores"><span sort="${inst['cores']}">${inst['cores']} Cores</span></td>
 			<td class="memory"><span sort="${inst['memory']}">${inst['memory']} GiB</span></td>
-			<td class="storage"><span sort="${inst['storage']}">${inst['storage']} GB</span></td>
+			% if inst['storage'] == "EBS Only":
+				<td class="storage"><span sort="999999"><abbr title="Amazon Elastic Block Store (EBS) provides raw block-level storage that can be attached to Amazon EC2 instances.">EBS Only</abbr></span></td>
+			% else:
+				<td class="storage"><span sort="${inst['storage']}">${inst['storage']} GB</span></td>
+			% endif
 			<td class="gpus">${inst['GPU']}</td>
-			% for platform in ['linux', 'windows','sql-web','sql-standard','sql-enterprise','msft-r-server-linux','biztalk-standard','biztalk-enterprise','oracle-java','redhat-enterprise-linux']:
+			% for platform in ['linux', 'windows','sql-web','sql-standard']:
 			## note that the contents in these cost cells are overwritten by the JS change_cost() func, but the initial
 			## data here is used for sorting (and anyone with JS disabled...)
 			## for more info, see https://github.com/powdahound/ec2instances.info/issues/140

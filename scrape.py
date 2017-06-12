@@ -646,4 +646,4 @@ def scrape(data_file):
 
 
 if __name__ == '__main__':
-    scrape('www/instances.json')
+    scrape('data/AWSinstances.json')

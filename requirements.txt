@@ -5,3 +5,6 @@ lxml
 paramiko
 pycrypto
 requests==2.9.1
+azure-mgmt-commerce
+azure-common
+azure-mgmt-resource
