@@ -96,8 +96,22 @@
 
     <table cellspacing="0" class="table table-bordered table-hover table-condensed" id="data">
 	<thead>
-	<tr id="total">
-			<th class="name">Total (0 Selected)</th>
+		<tr>
+			<th class="name">Name</th>
+			<th class="quantity">Quantity</th>
+			<th class="cores">Cores</th>
+			<th class="memory">Memory (GiB)</th>
+			<th class="storage"><abbr title="Storage values for disk sizes use a legacy &quot;GB&quot; label. They are actually calculated in gibibytes, and all values should be read as &quot;X GiB&quot;">Storage (GB)</abbr></th>
+			<th class="gpus">GPUs</th>
+			<th class="cost linux">Linux</th>
+			<th class="cost windows">Windows</th>
+			<th class="cost sql-web">SQL Server Web</th>
+			<th class="cost sql-standard">SQL Server Standard</th>
+		</tr>
+	</thead>
+	<tfoot>
+            <tr id="totalazure">
+			<th class="name"><span><img src="../favicon.ico" style="height:40%"></span> Total (0 Selected)</th></th>
 			<th class="quantity"></th>
 			<th class="cores"></th>
 			<th class="memory"></th>
@@ -107,34 +121,37 @@
 			<th class="total-cost ${platform}"><span total="0">$0.000 hourly</span></th>
 			% endfor
 		</tr>
-		<tr>
-			<th class="name">Name</th>
-			<th class="quantity">Quantity</th>
-			<th class="cores">Cores</th>
-			<th class="memory">Memory</th>
-			<th class="storage"><abbr title="Storage values for disk sizes use a legacy &quot;GB&quot; label. They are actually calculated in gibibytes, and all values should be read as &quot;X GiB&quot;">Storage</abbr></th>
-			<th class="gpus">GPUs</th>
-			<th class="cost linux">Linux</th>
-			<th class="cost windows">Windows</th>
-			<th class="cost sql-web">SQL Server Web</th>
-			<th class="cost sql-standard">SQL Server Standard</th>
+		<tr id="totalaws" class="aws">
+			<th class="name"><span><img src="../aws.ico" style="height:50%"></span> Total (0 Selected)</th>
+			<th class="quantity"></th>
+			<th class="cores"></th>
+			<th class="memory"></th>
+			<th class="storage"></th>
+			<th class="gpus"></th>
+			% for platform in ['linux', 'windows','sql-web','sql-standard']:
+			<th class="total-cost ${platform}"><span total="0">$0.000 hourly</span></th>
+			% endfor
 		</tr>
-	</thead>
+        </tfoot>
 	<tbody>
 		% for inst in instances:
 		% if '(AWS)' in inst['name']:
 			<tr class='instance aws' id="${inst['name'].lower().replace(" ", "_")}">
 		% else:
-				<tr class='instance' id="${inst['name'].lower().replace(" ", "_")}">
+				<tr class='instance azure' id="${inst['name'].lower().replace(" ", "_")}">
 		% endif
-			<td class="name">${inst['name']}</td>
+			% if '(AWS)' in inst['name']:
+			<td class="name"><span><img src="../aws.ico" style="height:50%"></span> ${inst['name'].replace("(AWS) ","")}</td>
+		% else:
+				<td class="name">${inst['name']}</td>
+		% endif
 			<td class="quantity"><input type="number" class="form-control input-sm" id="quantity" name="quantity" value="1" placeholder="0"></td>
-			<td class="cores"><span sort="${inst['cores']}">${inst['cores']} Cores</span></td>
-			<td class="memory"><span sort="${inst['memory']}">${inst['memory']} GiB</span></td>
+			<td class="cores"><span sort="${inst['cores']}">${inst['cores']}</span></td>
+			<td class="memory"><span sort="${inst['memory']}">${inst['memory']}</span></td>
 			% if inst['storage'] == "EBS Only":
 				<td class="storage"><span sort="999999"><abbr title="Amazon Elastic Block Store (EBS) provides raw block-level storage that can be attached to Amazon EC2 instances.">EBS Only</abbr></span></td>
 			% else:
-				<td class="storage"><span sort="${inst['storage']}">${inst['storage']} GB</span></td>
+				<td class="storage"><span sort="${inst['storage']}">${inst['storage']}</span></td>
 			% endif
 			<td class="gpus">${inst['GPU']}</td>
 			% for platform in ['linux', 'windows','sql-web','sql-standard']:
@@ -155,3 +172,23 @@
 		% endfor
 	</tbody>
 </table>
+
+<div class="well">
+      <p>
+        <strong>Why?</strong>
+        Because it's time-consuming to compare virtual machines using Azure's own <a href="https://azure.microsoft.com/en-us/pricing/details/virtual-machines/linux/" target="_blank">pricing</a>, <a href="https://azure.microsoft.com/en-us/pricing/calculator/" target="_blank">pricing calculator</a>, and other pages.
+      </p>
+      <p>
+        <strong>Who?</strong>
+        It was started for AWS by <a href="http://twitter.com/powdahound" target="_blank">@powdahound</a> and contributed to by <a href="https://github.com/powdahound/ec2instances.info/contributors" target="_blank">many</a> at <a href="https://github.com/powdahound/ec2instances.info" target="_blank">GitHub</a>. <a href="https://github.com/WaqasAliAbbasi" target="_blank">WaqasAliAbbasi</a> ported and improved it for Azure under the supervision of Patrick Lam and Brian Law at Microsoft Hong Kong.
+      </p>
+      <p>
+        <strong>How?</strong>
+        Azure Virtual Machine specifications are semi-automatically updated while the prices are regularly refreshed through <a href="https://docs.microsoft.com/en-us/azure/billing/billing-usage-rate-card-overview" target="_blank">Azure RateCard API</a>. This was last done at ${generated_at}.
+      </p>
+
+      <p class="bg-warning">
+        <strong>Warning:</strong> This site is not maintained by or affiliated with Microsoft. The data shown is not guaranteed to be accurate or current. Please <a href="mailto:a-waali@microsoft.com">report issues</a> you see.
+      </p>
+
+    </div>

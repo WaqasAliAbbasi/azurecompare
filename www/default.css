@@ -41,10 +41,6 @@ body {
   cursor: pointer;
 }
 
-#data tr.aws {
-    background-color: #FFE4C4;
-}
-
 #data tr.highlight, #data tr.highlight:hover {
   background-color: #D3FFFF;
 }
@@ -64,6 +60,19 @@ body {
 
 #total {
     cursor: default !important;
+    background-color: #eee;
+}
+
+#totalazure {
+    background-color: #D3FFFF !important;
+}
+
+tr.aws.highlight {
+    background-color: #FFE4C4 !important;
+}
+
+#totalaws {
+    background-color: #FFE4C4 !important;
 }
 
 #data td.name {
@@ -142,6 +151,10 @@ input[type="number"] {
 .btn-sm {
   height: 26px;
   padding: 3px 0px;
+}
+
+.csvAzureButton {
+    margin-right: 3.5px;
 }
 
 .well p:last-child {

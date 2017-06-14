@@ -3,12 +3,9 @@
     "",
     "\\in",
     "\\www",
-    "\\www\\bootstrap",
-    "\\www\\bootstrap\\js",
     "\\www\\datatables",
-    "\\www\\datatables\\images",
     "\\www\\store"
   ],
-  "SelectedNode": "\\in\\base.mako",
+  "SelectedNode": "\\www\\default.js",
   "PreviewInSolutionExplorer": false
 }

@@ -96,46 +96,48 @@
 
     <table cellspacing="0" class="table table-bordered table-hover table-condensed" id="data">
 	<thead>
-	<tr id="total">
-			<th class="name">Total (0 Selected)</th>
+		<tr>
+			<th class="name">Name</th>
+			<th class="quantity">Quantity</th>
+			<th class="cores">Cores</th>
+			<th class="memory">Memory (GiB)</th>
+			<th class="storage"><abbr title="Storage values for disk sizes use a legacy &quot;GB&quot; label. They are actually calculated in gibibytes, and all values should be read as &quot;X GiB&quot;">Storage (GB)</abbr></th>
+			<th class="gpus">GPUs</th>
+			<th class="cost linux">Linux (hourly)</th>
+			<!--<th class="cost linux-low-priority">Linux (Low Priority)</th>-->
+			<th class="cost windows">Windows (hourly)</th>
+			<!--<th class="cost windows-low-priority">Windows (Low Priority)</th>-->
+			<th class="cost sql-web">SQL Server Web (hourly)</th>
+			<th class="cost sql-standard">SQL Server Standard (hourly)</th>
+			<th class="cost sql-enterprise">SQL Server Enterprise (hourly)</th>
+			<th class="cost msft-r-server-linux">MSFT R Server for Linux (hourly)</th>
+			<th class="cost biztalk-standard">BizTalk Server Standard (hourly)</th>
+			<th class="cost biztalk-enterprise">BizTalk Server Enterprise (hourly)</th>
+			<th class="cost oracle-java">Java Development Environment (hourly)</th>
+			<th class="cost redhat-enterprise-linux">Red Hat Enterprise Linux (hourly)</th>
+		</tr>
+	</thead>
+	<tfoot>
+            <tr id="total">
+			<th class="name"><span><img src="../favicon.ico" style="height:40%"></span> Total (0 Selected)</th></th>
 			<th class="quantity"></th>
 			<th class="cores"></th>
 			<th class="memory"></th>
 			<th class="storage"></th>
 			<th class="gpus"></th>
 			% for platform in ['linux', 'windows','sql-web','sql-standard','sql-enterprise','msft-r-server-linux','biztalk-standard','biztalk-enterprise','oracle-java','redhat-enterprise-linux']:
-			<th class="total-cost ${platform}"><span total="0">$0.000 hourly</span></th>
+			<th class="total-cost ${platform}"><span total="0">$0.000</span></th>
 			% endfor
 		</tr>
-		<tr>
-			<th class="name">Name</th>
-			<th class="quantity">Quantity</th>
-			<th class="cores">Cores</th>
-			<th class="memory">Memory</th>
-			<th class="storage"><abbr title="Storage values for disk sizes use a legacy &quot;GB&quot; label. They are actually calculated in gibibytes, and all values should be read as &quot;X GiB&quot;">Storage</abbr></th>
-			<th class="gpus">GPUs</th>
-			<th class="cost linux">Linux</th>
-			<!--<th class="cost linux-low-priority">Linux (Low Priority)</th>-->
-			<th class="cost windows">Windows</th>
-			<!--<th class="cost windows-low-priority">Windows (Low Priority)</th>-->
-			<th class="cost sql-web">SQL Server Web</th>
-			<th class="cost sql-standard">SQL Server Standard</th>
-			<th class="cost sql-enterprise">SQL Server Enterprise</th>
-			<th class="cost msft-r-server-linux">MSFT R Server for Linux</th>
-			<th class="cost biztalk-standard">BizTalk Server Standard</th>
-			<th class="cost biztalk-enterprise">BizTalk Server Enterprise</th>
-			<th class="cost oracle-java">Java Development Environment</th>
-			<th class="cost redhat-enterprise-linux">Red Hat Enterprise Linux</th>
-		</tr>
-	</thead>
+        </tfoot>
 	<tbody>
 		% for inst in instances:
 		<tr class='instance' id="${inst['name'].lower().replace(" ", "_")}">
 			<td class="name">${inst['name']}</td>
 			<td class="quantity"><input type="number" class="form-control input-sm" id="quantity" name="quantity" value="1" placeholder="0"></td>
-			<td class="cores"><span sort="${inst['cores']}">${inst['cores']} Cores</span></td>
-			<td class="memory"><span sort="${inst['memory']}">${inst['memory']} GiB</span></td>
-			<td class="storage"><span sort="${inst['storage']}">${inst['storage']} GB</span></td>
+			<td class="cores"><span sort="${inst['cores']}">${inst['cores']}</span></td>
+			<td class="memory"><span sort="${inst['memory']}">${inst['memory']}</span></td>
+			<td class="storage"><span sort="${inst['storage']}">${inst['storage']}</span></td>
 			<td class="gpus">${inst['GPU']}</td>
 			% for platform in ['linux', 'windows','sql-web','sql-standard','sql-enterprise','msft-r-server-linux','biztalk-standard','biztalk-enterprise','oracle-java','redhat-enterprise-linux']:
 			## note that the contents in these cost cells are overwritten by the JS change_cost() func, but the initial
@@ -144,7 +146,7 @@
 			<td class="cost ${platform}" data-pricing='${json.dumps({r:p.get(platform, p.get(' os',{})) for r,p in inst['pricing'].iteritems()}) | h}'>
 				% if inst['pricing'].get('AP Southeast', {}).get(platform) != "N/A":
 				<span sort="${inst['pricing']['AP Southeast'][platform]}">
-					$${inst['pricing']['AP Southeast'][platform]} hourly
+					$${inst['pricing']['AP Southeast'][platform]}
 				</span>
 				% else:
 				<span sort="99999999">unavailable</span>

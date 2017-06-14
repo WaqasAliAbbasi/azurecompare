@@ -6,6 +6,7 @@ var g_settings = {};
 var totalSelected = parseInt(0);
 var clickedQuantity = false;
 var selectedItems = {};
+var selectedItemsAWS = {};
 
 var g_settings_defaults = {
     cost_duration: 'hourly',
@@ -17,86 +18,330 @@ var g_settings_defaults = {
 };
 
 function init_data_table() {
-    g_data_table = $('#data').DataTable({
-        "select": true,
-        "bPaginate": false,
-        "bInfo": false,
-        "bStateSave": true,
-        "oSearch": {
-            "bRegex": true,
-            "bSmart": false
-        },
-        "aoColumnDefs": [
-            {
-                // The columns below are sorted according to the sort attr of the <span> tag within their data cells
-                "aTargets": [
-                    "memory",
-                    "cores",
-                    "storage",
-                    "cost"
-                ],
-                "sType": "span-sort"
+    if ((window.location.href).indexOf("withaws") !== -1) {
+        g_data_table = $('#data').DataTable({
+            "select": true,
+            "bPaginate": false,
+            "bInfo": false,
+            "bStateSave": true,
+            "oSearch": {
+                "bRegex": true,
+                "bSmart": false
             },
-            {
-                // The columns below are hidden by default
-                "aTargets": [
-                    "gpus",
-                    "cost linux-low-priority",
-                    "cost windows-low-priority",
-                    "cost msft-r-server-linux",
-                    "cost biztalk- standard",
-                    "cost biztalk-enterprise",
-                    "cost oracle-java",
-                    "cost redhat-enterprise-linux",
-                ],
-                "bVisible": false
+            "aoColumnDefs": [
+                {
+                    // The columns below are sorted according to the sort attr of the <span> tag within their data cells
+                    "aTargets": [
+                        "memory",
+                        "cores",
+                        "storage",
+                        "cost"
+                    ],
+                    "sType": "span-sort"
+                },
+                {
+                    // The columns below are hidden by default
+                    "aTargets": [
+                        "gpus",
+                        "cost linux-low-priority",
+                        "cost windows-low-priority",
+                        "cost msft-r-server-linux",
+                        "cost biztalk- standard",
+                        "cost biztalk-enterprise",
+                        "cost oracle-java",
+                        "cost redhat-enterprise-linux",
+                    ],
+                    "bVisible": false
+                },
+                { "width": "5%", "targets": 1 }
+            ],
+            // default sort by linux cost
+            "aaSorting": [
+                [6, "asc"]
+            ],
+            'initComplete': function () {
+                // fire event in separate context so that calls to get_data_table()
+                // receive the cached object.
+                setTimeout(function () {
+                    on_data_table_initialized();
+                }, 0);
             },
-            { "width": "5%", "targets": 1 }
-        ],
-        // default sort by linux cost
-        "aaSorting": [
-            [6, "asc"]
-        ],
-        'initComplete': function () {
-            // fire event in separate context so that calls to get_data_table()
-            // receive the cached object.
-            setTimeout(function () {
-                on_data_table_initialized();
-            }, 0);
-        },
-        'drawCallback': function () {
-            // abort if initialization hasn't finished yet (initial draw)
-            if (g_data_table === null) {
-                return;
-            }
+            'drawCallback': function () {
+                // abort if initialization hasn't finished yet (initial draw)
+                if (g_data_table === null) {
+                    return;
+                }
 
-            // Whenever the table is drawn, update the costs. This is necessary
-            // because the cost duration may have changed while a filter was being
-            // used and so some rows will need updating.
-            redraw_costs();
-        },
-        // Store filtering, sorting, etc - core datatable feature
-        'stateSave': true,
-        // Allow export to CSV
-        buttons: [{
-            extend: 'csv',
-            text: 'Export Selected to CSV',
-            action: function (e, dt, button, config) {
-                // Add code to make changes to table here
-                var dta = $("#data").DataTable();
-                dta.rows('.highlight').select();
-                // Call the original action function afterwards to
-                // continue the action.
-                // Otherwise you're just overriding it completely.
-                $.fn.dataTable.ext.buttons.csvHtml5.action(e, dt, button, config);
+                // Whenever the table is drawn, update the costs. This is necessary
+                // because the cost duration may have changed while a filter was being
+                // used and so some rows will need updating.
+                redraw_costs();
             },
+            // Store filtering, sorting, etc - core datatable feature
+            'stateSave': true,
+            // Allow export to CSV
+            buttons: [{
+                extend: 'csv',
+                text: 'Export Azure Selections to CSV',
+                title: 'Azure VM Details',
+                className: 'csvAzureButton',
+                action: function (e, dt, button, config) {
+                    // Add code to make changes to table here
+                    var dta = $("#data").DataTable();
+                    dta.rows().deselect();
+                    dta.rows('.highlight.azure').select();
+                    // Call the original action function afterwards to
+                    // continue the action.
+                    // Otherwise you're just overriding it completely.
+                    $.fn.dataTable.ext.buttons.csvHtml5.action(e, dt, button, config);
+                },
                 exportOptions: {
                     rows: { selected: true },
-                    columns: ":not(:nth-child(2))"
+                    columns: ":not(:nth-child(2)),:visible"
+                },
+                header: true,
+                footer: true
+            },{
+                extend: 'csv',
+                text: 'Export AWS Selections to CSV',
+                title: 'AWS EC2 Details',
+                className: 'btn-warning',
+                action: function (e, dt, button, config) {
+                    // Add code to make changes to table here
+                    var dta = $("#data").DataTable();
+                    dta.rows().deselect();
+                    dta.rows('.highlight.aws').select();
+                    $($("#totalazure")).empty();
+                    if (!isNaN(Object.values(selectedItemsAWS).reduce(add, 0))) {
+                        totalSelected = Object.values(selectedItemsAWS).reduce(add, 0);
+                        var elemTotalName = $($("#data").DataTable().table().footer()).find('#totalazure').find("th.name");
+                        elemTotalName.empty();
+                        elemTotalName.append("<span><img src=\"../aws.ico\" style=\"height:50%\" /></span>" + " Total (" + totalSelected + " Selected)");
+
+                        $.each($($("#data").DataTable().table().footer()).find('#totalazure').find("th.total-cost"), function (i, elemTotal) {
+                            var elemTotal = $(elemTotal);
+                            elemTotal.empty();
+                            elemTotal.append('<span total="0">$0.000</span>');
+                        });
+
+                        if (Object.keys(selectedItemsAWS).length > 0) {
+                            $.each(Object.keys(selectedItemsAWS), function (i, id) {
+                                $.each($($("#data").DataTable().row("#" + id).node()).find("td.cost"), function (k, elem) {
+                                    elem = $(elem);
+                                    var elemTotal = $($($("#data").DataTable().table().footer()).find('#totalazure').find("th.total-cost")[k]);
+                                    var value2 = 0;
+                                    if (elem.find('span').attr('sort') != '99999999') {
+                                        value2 = parseFloat(elem.find('span').attr('sort')) * selectedItemsAWS[id];
+                                    }
+                                    var value = parseFloat(elemTotal.find('span').attr('total')) + value2;
+                                    value = Math.round(value * 1000) / 1000;
+                                    elemTotal.empty();
+                                    elemTotal.append('<span total="' + value.toFixed(3) + '">$' + value.toFixed(3) + '</span>');
+                                });
+                            });
+                        }
+                    }
+
+                    $.fn.dataTable.ext.buttons.csvHtml5.action(e, dt, button, config);
+
+                    if (!isNaN(Object.values(selectedItems).reduce(add, 0))) {
+                        totalSelected = Object.values(selectedItems).reduce(add, 0);
+                        var elemTotalName = $($("#data").DataTable().table().footer()).find('#totalazure').find("th.name");
+                        elemTotalName.empty();
+                        elemTotalName.append("<span><img src=\"../favicon.ico\" style=\"height:40%\" /></span>" + " Total (" + totalSelected + " Selected)");
+
+                        $.each($($("#data").DataTable().table().footer()).find('#totalazure').find("th.total-cost"), function (i, elemTotal) {
+                            var elemTotal = $(elemTotal);
+                            elemTotal.empty();
+                            elemTotal.append('<span total="0">$0.000 ' + g_settings_defaults.cost_duration + '</span>');
+                        });
+
+                        if (Object.keys(selectedItems).length > 0) {
+                            $.each(Object.keys(selectedItems), function (i, id) {
+                                $.each($($("#data").DataTable().row("#" + id).node()).find("td.cost"), function (k, elem) {
+                                    elem = $(elem);
+                                    var elemTotal = $($($("#data").DataTable().table().footer()).find('#totalazure').find("th.total-cost")[k]);
+                                    var value2 = 0;
+                                    if (elem.find('span').attr('sort') != '99999999') {
+                                        value2 = parseFloat(elem.find('span').attr('sort')) * selectedItems[id];
+                                    }
+                                    var value = parseFloat(elemTotal.find('span').attr('total')) + value2;
+                                    value = Math.round(value * 1000) / 1000;
+                                    elemTotal.empty();
+                                    elemTotal.append('<span total="' + value.toFixed(3) + '">$' + value.toFixed(3) + '</span>');
+                                });
+                            });
+                        }
+                    }
+                },
+                exportOptions: {
+                    rows: { selected: true },
+                    columns: ":not(:nth-child(2)),:visible"
+                },
+                header: true,
+                footer: true
+            }],
+            fixedHeader: {
+                header: true,
+                footer: true
+            }
+        });
+    }
+    else
+    {
+        g_data_table = $('#data').DataTable({
+            "select": true,
+            "bPaginate": false,
+            "bInfo": false,
+            "bStateSave": true,
+            "oSearch": {
+                "bRegex": true,
+                "bSmart": false
+            },
+            "aoColumnDefs": [
+                {
+                    // The columns below are sorted according to the sort attr of the <span> tag within their data cells
+                    "aTargets": [
+                        "memory",
+                        "cores",
+                        "storage",
+                        "cost"
+                    ],
+                    "sType": "span-sort"
+                },
+                {
+                    // The columns below are hidden by default
+                    "aTargets": [
+                        "gpus",
+                        "cost linux-low-priority",
+                        "cost windows-low-priority",
+                        "cost msft-r-server-linux",
+                        "cost biztalk- standard",
+                        "cost biztalk-enterprise",
+                        "cost oracle-java",
+                        "cost redhat-enterprise-linux",
+                    ],
+                    "bVisible": false
+                },
+                { "width": "5%", "targets": 1 }
+            ],
+            // default sort by linux cost
+            "aaSorting": [
+                [6, "asc"]
+            ],
+            'initComplete': function () {
+                // fire event in separate context so that calls to get_data_table()
+                // receive the cached object.
+                setTimeout(function () {
+                    on_data_table_initialized();
+                }, 0);
+            },
+            'drawCallback': function () {
+                // abort if initialization hasn't finished yet (initial draw)
+                if (g_data_table === null) {
+                    return;
                 }
-        }
-        ]
-    });
+
+                // Whenever the table is drawn, update the costs. This is necessary
+                // because the cost duration may have changed while a filter was being
+                // used and so some rows will need updating.
+                redraw_costs();
+            },
+            // Store filtering, sorting, etc - core datatable feature
+            'stateSave': true,
+            // Allow export to CSV
+            buttons: [{
+                extend: 'csv',
+                text: 'Export Selected to CSV',
+                title: 'Azure & AWS Comparison',
+                action: function (e, dt, button, config) {
+                    // Add code to make changes to table here
+                    var dta = $("#data").DataTable();
+                    dta.rows().deselect();
+                    dta.rows('.highlight.azure').select();
+                    // Call the original action function afterwards to
+                    // continue the action.
+                    // Otherwise you're just overriding it completely.
+                    $.fn.dataTable.ext.buttons.csvHtml5.action(e, dt, button, config);
+                    $($("#totalazure")).empty();
+                    dta.rows().deselect();
+                    dta.rows('.highlight.aws').select();
+
+                    if (!isNaN(Object.values(selectedItemsAWS).reduce(add, 0))) {
+                        totalSelected = Object.values(selectedItemsAWS).reduce(add, 0);
+                        var elemTotalName = $($("#data").DataTable().table().footer()).find('#totalazure').find("th.name");
+                        elemTotalName.empty();
+                        elemTotalName.append("<span><img src=\"../aws.ico\" style=\"height:50%\" /></span>" + " Total (" + totalSelected + " Selected)");
+
+                        $.each($($("#data").DataTable().table().footer()).find('#totalazure').find("th.total-cost"), function (i, elemTotal) {
+                            var elemTotal = $(elemTotal);
+                            elemTotal.empty();
+                            elemTotal.append('<span total="0">$0.000</span>');
+                        });
+
+                        if (Object.keys(selectedItemsAWS).length > 0) {
+                            $.each(Object.keys(selectedItemsAWS), function (i, id) {
+                                $.each($($("#data").DataTable().row("#" + id).node()).find("td.cost"), function (k, elem) {
+                                    elem = $(elem);
+                                    var elemTotal = $($($("#data").DataTable().table().footer()).find('#totalazure').find("th.total-cost")[k]);
+                                    var value2 = 0;
+                                    if (elem.find('span').attr('sort') != '99999999') {
+                                        value2 = parseFloat(elem.find('span').attr('sort')) * selectedItemsAWS[id];
+                                    }
+                                    var value = parseFloat(elemTotal.find('span').attr('total')) + value2;
+                                    value = Math.round(value * 1000) / 1000;
+                                    elemTotal.empty();
+                                    elemTotal.append('<span total="' + value.toFixed(3) + '">$' + value.toFixed(3) + '</span>');
+                                });
+                            });
+                        }
+                    }
+
+                    $.fn.dataTable.ext.buttons.csvHtml5.action(e, dt, button, config);
+
+                    if (!isNaN(Object.values(selectedItems).reduce(add, 0))) {
+                        totalSelected = Object.values(selectedItems).reduce(add, 0);
+                        var elemTotalName = $($("#data").DataTable().table().footer()).find('#totalazure').find("th.name");
+                        elemTotalName.empty();
+                        elemTotalName.append("<span><img src=\"../favicon.ico\" style=\"height:40%\" /></span>" + " Total (" + totalSelected + " Selected)");
+
+                        $.each($($("#data").DataTable().table().footer()).find('#totalazure').find("th.total-cost"), function (i, elemTotal) {
+                            var elemTotal = $(elemTotal);
+                            elemTotal.empty();
+                            elemTotal.append('<span total="0">$0.000 ' + g_settings_defaults.cost_duration + '</span>');
+                        });
+
+                        if (Object.keys(selectedItems).length > 0) {
+                            $.each(Object.keys(selectedItems), function (i, id) {
+                                $.each($($("#data").DataTable().row("#" + id).node()).find("td.cost"), function (k, elem) {
+                                    elem = $(elem);
+                                    var elemTotal = $($($("#data").DataTable().table().footer()).find('#totalazure').find("th.total-cost")[k]);
+                                    var value2 = 0;
+                                    if (elem.find('span').attr('sort') != '99999999') {
+                                        value2 = parseFloat(elem.find('span').attr('sort')) * selectedItems[id];
+                                    }
+                                    var value = parseFloat(elemTotal.find('span').attr('total')) + value2;
+                                    value = Math.round(value * 1000) / 1000;
+                                    elemTotal.empty();
+                                    elemTotal.append('<span total="' + value.toFixed(3) + '">$' + value.toFixed(3) + '</span>');
+                                });
+                            });
+                        }
+                    }
+                },
+                exportOptions: {
+                    rows: { selected: true },
+                    columns: ":not(:nth-child(2)),:visible"
+                },
+                header: true,
+                footer: true
+            }],
+            fixedHeader: {
+                header: true,
+                footer: true
+            }
+        });
+    }
 
     g_data_table
         .buttons()
@@ -144,11 +389,46 @@ function change_cost(duration) {
         per_time = elem.data("pricing")[g_settings.region];
         if (per_time && !isNaN(per_time)) {
             per_time = (per_time * multiplier).toFixed(3);
+
             elem.empty();
-            elem.append('<span sort="' + per_time + '">$' + per_time + ' ' + duration + '</span>');
+            elem.append('<span sort="' + per_time + '">$' + per_time + '</span>');
         } else {
             elem.empty();
             elem.append('<span sort="99999999">unavailable</span>');
+        }
+    });
+
+    $.each($("th.cost"), function (i, elem) {
+        elem = $(elem);
+        if (elem.attr("class").indexOf("cost linux") !== -1) {
+            elem.text("Linux (" + duration + ")");
+        }
+        else if (elem.attr("class").indexOf("cost windows") !== -1){
+            elem.text("Windows (" + duration + ")");
+        }
+        else if (elem.attr("class").indexOf("cost sql-web") !== -1){
+            elem.text("SQL Server Web (" + duration + ")");
+        }
+        else if (elem.attr("class").indexOf("cost sql-standard") !== -1) {
+            elem.text("SQL Server Standard (" + duration + ")");
+        }
+        else if (elem.attr("class").indexOf("cost sql-enterprise") !== -1){
+            elem.text("SQL Server Enterprise (" + duration + ")");
+        }
+        else if (elem.attr("class").indexOf("cost msft-r-server-linux") !== -1){
+            elem.text("MSFT R Server for Linux (" + duration + ")");
+        }
+        else if (elem.attr("class").indexOf("cost biztalk-standard") !== -1){
+            elem.text("BizTalk Server Standard (" + duration + ")");
+        }
+        else if (elem.attr("class").indexOf("cost biztalk-enterprise") !== -1){
+            elem.text("BizTalk Server Enterprise (" + duration + ")");
+        }
+        else if (elem.attr("class").indexOf("cost oracle-java") !== -1){
+            elem.text("Java Development Environment (" + duration + ")");
+        }
+        else if (elem.attr("class").indexOf("cost redhat-enterprise") !== -1){
+            elem.text("Red Hat Enterprise Linux (" + duration + ")");
         }
     });
 
@@ -207,6 +487,9 @@ function setup_clear() {
         g_settings = JSON.parse(JSON.stringify(g_settings_defaults)); // clone
         clear_row_selections();
         selectedItems = {};
+        if ((window.location.href).indexOf("withaws") !== -1) {
+            selectedItemsAWS = {};
+        }
         maybe_update_url();
         store.clear();
         g_data_table.state.clear();
@@ -234,9 +517,16 @@ function url_for_selections() {
             delete params[key];
         }
     }
-
-    var selected_row_ids = Object.keys(selectedItems).map(function (key) {
-        var q = parseInt(selectedItems[key]);
+    var combinedItems = {};
+    if ((window.location.href).indexOf("withaws") !== -1) {
+        Object.assign(combinedItems, selectedItems, selectedItemsAWS);
+    }
+    else
+    {
+        combinedItems = selectedItems;
+    }
+    var selected_row_ids = Object.keys(combinedItems).map(function (key) {
+        var q = parseInt(combinedItems[key]);
         if (isNaN(q)) {
             q = 0;
         }
@@ -261,8 +551,15 @@ function url_for_selections() {
 }
 
 function maybe_update_url() {
+    if ((window.location.href).indexOf("withaws") !== -1) {
+        store.set('azureawsvm_settings', g_settings);
+    }
+    else {
+        store.set('azurevm_settings', g_settings);
+    }
     // Save localstorage data as well
-    store.set('azurevm_settings', g_settings);
+    
+    
 
     if (!history.replaceState) {
         return;
@@ -324,10 +621,26 @@ function on_data_table_initialized() {
         id = id.split(':')[0];
         id = id.replace('.', '\\.');
         if (id != '') {
-            selectedItems[id] = urlquantity;
-            $($("#data").DataTable().row("#" + id).node()).addClass('highlight');
-            $($("#data").DataTable().row("#" + id).node()).find('input').val(urlquantity);
+            if ((window.location.href).indexOf("withaws") !== -1) {
+                if (id.indexOf("aws") !== -1) {
+                    selectedItemsAWS[id] = urlquantity;
+                    $($("#data").DataTable().row("#" + id).node()).addClass('highlight');
+                    $($("#data").DataTable().row("#" + id).node()).find('input').val(urlquantity);
+                }
+                else {
+                    selectedItems[id] = urlquantity;
+                    $($("#data").DataTable().row("#" + id).node()).addClass('highlight');
+                    $($("#data").DataTable().row("#" + id).node()).find('input').val(urlquantity);
+                }
+            }
+            else
+            {
+                selectedItems[id] = urlquantity;
+                $($("#data").DataTable().row("#" + id).node()).addClass('highlight');
+                $($("#data").DataTable().row("#" + id).node()).find('input').val(urlquantity);
+            }
         }
+
     });
 
     configure_highlighting();
@@ -357,7 +670,7 @@ function on_data_table_initialized() {
         change_cost(e.target.getAttribute("duration"));
     });
 
-    $("#region-dropdown li.available").bind("click", function (e) {
+    $("#region-dropdown li").bind("click", function (e) {
         change_region($(e.target).data('region'));
     });
 
@@ -425,7 +738,33 @@ function load_settings() {
     }
     else
     {
-        g_settings = g_settings_defaults;
+        // load settings from local storage
+        g_settings = store.get('azureaws_settings') || {};
+
+        if (location.search) {
+            var params = location.search.slice(1).split('&');
+            params.forEach(function (param) {
+                var parts = param.split('=');
+                var key = parts[0];
+                var val = parts[1];
+                // support legacy key names
+                if (key == 'cost') {
+                    key = 'cost_duration';
+                } else if (key == 'term') {
+                    key = 'reserved_term';
+                }
+                // store in global settings
+                //console.log('loaded from url', key, decodeURI(val));
+                g_settings[key] = decodeURI(val);
+            });
+        }
+
+        // use default settings for missing values
+        for (var key in g_settings_defaults) {
+            if (g_settings[key] === undefined) {
+                g_settings[key] = g_settings_defaults[key];
+            }
+        }     
     }
     return g_settings;
 }
@@ -450,23 +789,40 @@ function configure_highlighting() {
             if (isNaN(quantity) || quantity == '') {
                 quantity = parseInt(0);
             }
-            if ($(this).hasClass('highlight')) {              
-                delete selectedItems[id];
+            if ($(this).hasClass('highlight')) {
+                if ((window.location.href).indexOf("withaws") !== -1) {
+                    if (id.indexOf("aws") !== -1) {
+                        delete selectedItemsAWS[id];
+                    }
+                    else {
+                        delete selectedItems[id];
+                    }
+                }
+                else {
+                    delete selectedItems[id];
+                }
             }
             else {
-                selectedItems[id] = quantity;
+                if ((window.location.href).indexOf("withaws") !== -1) {
+                    if (id.indexOf("aws") !== -1) {
+                        selectedItemsAWS[id] = quantity;
+                    }
+                    else {
+                        selectedItems[id] = quantity;
+                    }
+                }
+                else {
+                    selectedItems[id] = quantity;
+                }
             }
-            console.log(id);
             $($("#data").DataTable().row("#" + id).node()).toggleClass('highlight');
-
             if (!compareOn) {
                 $compareBtn.prop('disabled', !$rows.is('.highlight'));
             }
             update_selections();
             maybe_update_url();
         }
-        else
-        {
+        else {
             clickedQuantity = false;
         }
     });
@@ -498,59 +854,144 @@ function configure_highlighting() {
             }
             $(this).val($(this).val().replace(/^0+/, ''));
             var quantity = parseInt($(this).val());
-            console.log(selectedItems);
             if (isNaN(quantity) || quantity == '') {
                 quantity = parseInt(0);
             }
-            selectedItems[$(this).parent().parent().attr('id')] = quantity;
-            console.log(selectedItems);
+            if ((window.location.href).indexOf("withaws") !== -1) {
+                if ($(this).parent().parent().attr('id').indexOf("aws") !== -1) {
+                    selectedItemsAWS[$(this).parent().parent().attr('id')] = quantity;
+                }
+                else {
+                    selectedItems[$(this).parent().parent().attr('id')] = quantity;
+                }
+            }
+            else {
+                selectedItems[$(this).parent().parent().attr('id')] = quantity;
+            }
             update_selections();
             maybe_update_url();
         });
     });
 
     $("td.quantity input").on("change paste keyup", function () {
-        if ($(this).val() != '' && !(Math.floor($(this).val()) == $(this).val() && $.isNumeric($(this).val()))) {
-            $(this).val(parseInt(toString(Math.floor($(this).val())).replace(/^0+/, '0')));
+        if ($(this).parent().parent().hasClass('highlight')) {
+            if ($(this).val() != '' && !(Math.floor($(this).val()) == $(this).val() && $.isNumeric($(this).val()))) {
+                $(this).val(parseInt(toString(Math.floor($(this).val())).replace(/^0+/, '0')));
+            }
+            $(this).val($(this).val().replace(/^0+/, ''));
+            var quantity = parseInt($(this).val());
+            if (isNaN(quantity) || quantity == '') {
+                quantity = parseInt(0);
+            }
+            if ((window.location.href).indexOf("withaws") !== -1) {
+                if ($(this).parent().parent().attr('id').indexOf("aws") !== -1) 
+                {
+                    selectedItemsAWS[$(this).parent().parent().attr('id')] = quantity;
+                }
+                else {
+                    selectedItems[$(this).parent().parent().attr('id')] = quantity;
+                }
+            }
+            else {
+                selectedItems[$(this).parent().parent().attr('id')] = quantity;
+            }
+            update_selections();
+            maybe_update_url();
         }
-        $(this).val($(this).val().replace(/^0+/, ''));
-        var quantity = parseInt($(this).val());
-        if (isNaN(quantity) || quantity == '') {
-            quantity = parseInt(0);
-        }
-        selectedItems[$(this).parent().parent().attr('id')] = quantity;
-        update_selections();
-        maybe_update_url();
     });
 }
 
 function update_selections() {
-    if (!isNaN(Object.values(selectedItems).reduce(add, 0))) {
-        totalSelected = Object.values(selectedItems).reduce(add, 0);
-        var elemTotalName = $($('#total').find("th.name"));
-        elemTotalName.text('Total (' + totalSelected + ' Selected)');
+    if ((window.location.href).indexOf("withaws") !== -1) {
+        if (!isNaN(Object.values(selectedItems).reduce(add, 0))) {
+            totalSelected = Object.values(selectedItems).reduce(add, 0);
+            var elemTotalName = $($("#data").DataTable().table().footer()).find('#totalazure').find("th.name");
+            elemTotalName.empty();
+            elemTotalName.append("<span><img src=\"../favicon.ico\" style=\"height:40%\" /></span>" + " Total (" + totalSelected + " Selected)");
 
-        $.each($($("#data").DataTable().table().header()).find('#total').find("th.total-cost"), function (i, elemTotal) {
-            var elemTotal = $(elemTotal);
-            elemTotal.empty();
-            elemTotal.append('<span total="0">$0.000 ' + g_settings_defaults.cost_duration + '</span>');
-        });
-
-        if (Object.keys(selectedItems).length > 0) {
-            $.each(Object.keys(selectedItems), function (i, id) {
-                $.each($($("#data").DataTable().row("#" + id).node()).find("td.cost"), function (k, elem) {
-                    elem = $(elem);
-                    var elemTotal = $($($("#data").DataTable().table().header()).find('#total').find("th.total-cost")[k]);
-                    var value2 = 0;
-                    if (elem.find('span').attr('sort') != '99999999') {
-                        value2 = parseFloat(elem.find('span').attr('sort')) * selectedItems[id];
-                    }
-                    var value = parseFloat(elemTotal.find('span').attr('total')) + value2;
-                    value = Math.round(value * 1000) / 1000;
-                    elemTotal.empty();
-                    elemTotal.append('<span total="' + value.toFixed(3) + '">$' + value.toFixed(3) + ' ' + g_settings_defaults.cost_duration + '</span>');
-                });
+            $.each($($("#data").DataTable().table().footer()).find('#totalazure').find("th.total-cost"), function (i, elemTotal) {
+                var elemTotal = $(elemTotal);
+                elemTotal.empty();
+                elemTotal.append('<span total="0">$0.000</span>');
             });
+
+            if (Object.keys(selectedItems).length > 0) {
+                $.each(Object.keys(selectedItems), function (i, id) {
+                    $.each($($("#data").DataTable().row("#" + id).node()).find("td.cost"), function (k, elem) {
+                        elem = $(elem);
+                        var elemTotal = $($($("#data").DataTable().table().footer()).find('#totalazure').find("th.total-cost")[k]);
+                        var value2 = 0;
+                        if (elem.find('span').attr('sort') != '99999999') {
+                            value2 = parseFloat(elem.find('span').attr('sort')) * selectedItems[id];
+                        }
+                        var value = parseFloat(elemTotal.find('span').attr('total')) + value2;
+                        value = Math.round(value * 1000) / 1000;
+                        elemTotal.empty();
+                        elemTotal.append('<span total="' + value.toFixed(3) + '">$' + value.toFixed(3) + '</span>');
+                    });
+                });
+            }
+        }
+
+        if (!isNaN(Object.values(selectedItemsAWS).reduce(add, 0))) {
+            totalSelected = Object.values(selectedItemsAWS).reduce(add, 0);
+            var elemTotalName = $($("#data").DataTable().table().footer()).find('#totalaws').find("th.name");
+            elemTotalName.empty();
+            elemTotalName.append("<span><img src=\"../aws.ico\" style=\"height:50%\" /></span>" + " Total (" + totalSelected + " Selected)");
+
+            $.each($($("#data").DataTable().table().footer()).find('#totalaws').find("th.total-cost"), function (i, elemTotal) {
+                var elemTotal = $(elemTotal);
+                elemTotal.empty();
+                elemTotal.append('<span total="0">$0.000</span>');
+            });
+
+            if (Object.keys(selectedItemsAWS).length > 0) {
+                $.each(Object.keys(selectedItemsAWS), function (i, id) {
+                    $.each($($("#data").DataTable().row("#" + id).node()).find("td.cost"), function (k, elem) {
+                        elem = $(elem);
+                        var elemTotal = $($($("#data").DataTable().table().footer()).find('#totalaws').find("th.total-cost")[k]);
+                        var value2 = 0;
+                        if (elem.find('span').attr('sort') != '99999999') {
+                            value2 = parseFloat(elem.find('span').attr('sort')) * selectedItemsAWS[id];
+                        }
+                        var value = parseFloat(elemTotal.find('span').attr('total')) + value2;
+                        value = Math.round(value * 1000) / 1000;
+                        elemTotal.empty();
+                        elemTotal.append('<span total="' + value.toFixed(3) + '">$' + value.toFixed(3) + '</span>');
+                    });
+                });
+            }
+        }
+    }
+    else {
+        if (!isNaN(Object.values(selectedItems).reduce(add, 0))) {
+            totalSelected = Object.values(selectedItems).reduce(add, 0);
+            var elemTotalName = $($("#data").DataTable().table().footer()).find('#total').find("th.name");
+            elemTotalName.empty();
+            elemTotalName.append("<span><img src=\"../favicon.ico\" style=\"height:40%\" /></span>" + " Total (" + totalSelected + " Selected)");
+
+            $.each($($("#data").DataTable().table().footer()).find('#total').find("th.total-cost"), function (i, elemTotal) {
+                var elemTotal = $(elemTotal);
+                elemTotal.empty();
+                elemTotal.append('<span total="0">$0.000</span>');
+            });
+
+            if (Object.keys(selectedItems).length > 0) {
+                $.each(Object.keys(selectedItems), function (i, id) {
+                    $.each($($("#data").DataTable().row("#" + id).node()).find("td.cost"), function (k, elem) {
+                        elem = $(elem);
+                        var elemTotal = $($($("#data").DataTable().table().footer()).find('#total').find("th.total-cost")[k]);
+                        var value2 = 0;
+                        if (elem.find('span').attr('sort') != '99999999') {
+                            value2 = parseFloat(elem.find('span').attr('sort')) * selectedItems[id];
+                        }
+                        var value = parseFloat(elemTotal.find('span').attr('total')) + value2;
+                        value = Math.round(value * 1000) / 1000;
+                        elemTotal.empty();
+                        elemTotal.append('<span total="' + value.toFixed(3) + '">$' + value.toFixed(3) + '</span>');
+                    });
+                });
+            }
         }
     }
 }
